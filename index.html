@@ -132,6 +132,8 @@
 
 <script>
 
+const BASE_URL = "https://resume-analyser-az0e.onrender.com";   // 🔥 Your deployed backend URL
+
 let globalResume = null;
 let globalJD = null;
 
@@ -152,7 +154,7 @@ async function uploadExtract() {
     fd.append("resume", resume);
     fd.append("jd", jd);
 
-    let res = await fetch("http://127.0.0.1:8000/upload", {
+    let res = await fetch(`${BASE_URL}/upload`, {
         method: "POST",
         body: fd
     });
@@ -178,7 +180,7 @@ async function runLLM() {
     fd.append("resume", globalResume);
     fd.append("jd", globalJD);
 
-    let res = await fetch("http://127.0.0.1:8000/model", {
+    let res = await fetch(`${BASE_URL}/model`, {
         method: "POST",
         body: fd
     });
