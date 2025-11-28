@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ATS Resume Analyzer</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f4f7fb;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .navbar {
+            background: #1a73e8;
+            padding: 16px;
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: auto;
+            margin-top: 35px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 22px rgba(0,0,0,0.10);
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dce3ee;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.25s;
+        }
+
+        button:hover {
+            background: #0d53b7;
+        }
+
+        .result-box {
+            background: #ffffff;
+            border-left: 6px solid #1a73e8;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+            border-bottom: 2px solid #e8e8e8;
+            padding-bottom: 6px;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+
+<div class="navbar">
+    ATS Resume Analyzer
+</div>
+
+<div class="container">
+
+    <div class="card">
+        <div class="section-title">Upload Files</div>
+
+        <label>Resume (PDF)</label>
+        <input type="file" id="resume" accept="application/pdf">
+
+        <label>Job Description (PDF)</label>
+        <input type="file" id="jd" accept="application/pdf">
+
+        <button onclick="uploadExtract()">Upload and Extract Text</button>
+        <button onclick="runLLM()">Run ATS Evaluation</button>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Results</div>
+        <div id="result" class="result-box">No output yet.</div>
+    </div>
+
+</div>
+
+<script>
+
+let globalResume = null;
+let globalJD = null;
+
+// Upload & Extract
+async function uploadExtract() {
+    let resume = document.getElementById("resume").files[0];
+    let jd = document.getElementById("jd").files[0];
+
+    if (!resume || !jd) {
+        alert("Please upload both PDF files.");
+        return;
+    }
+
+    globalResume = resume;
+    globalJD = jd;
+
+    let fd = new FormData();
+    fd.append("resume", resume);
+    fd.append("jd", jd);
+
+    let res = await fetch("http://127.0.0.1:8000/upload", {
+        method: "POST",
+        body: fd
+    });
+
+    let data = await res.json();
+
+    document.getElementById("result").innerHTML =
+        "<strong>Resume Preview:</strong><br>" +
+        data.resume_text +
+        "<br><br>" +
+        "<strong>Job Description Preview:</strong><br>" +
+        data.jd_text;
+}
+
+// Run AI ATS
+async function runLLM() {
+    if (!globalResume || !globalJD) {
+        alert("Please upload the files first.");
+        return;
+    }
+
+    let fd = new FormData();
+    fd.append("resume", globalResume);
+    fd.append("jd", globalJD);
+
+    let res = await fetch("http://127.0.0.1:8000/model", {
+        method: "POST",
+        body: fd
+    });
+
+    let data = await res.json();
+
+    document.getElementById("result").innerHTML = marked.parse(data.response);
+}
+
+</script>
+
+</body>
+</html>
