@@ -1,30 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>ATS Resume Analyzer</title>
+
+    <!-- Markdown Renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: #f4f7fb;
+            background: #eef2f7;
             font-family: "Segoe UI", sans-serif;
         }
 
         .navbar {
             background: #1a73e8;
-            padding: 16px;
-            color: white;
-            font-size: 22px;
-            font-weight: 600;
+            padding: 18px 0;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }
 
         .container {
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
             margin-top: 35px;
         }
@@ -33,42 +36,51 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             margin-bottom: 25px;
-            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: 0.2s;
         }
 
         .card:hover {
-            box-shadow: 0 6px 22px rgba(0,0,0,0.10);
+            box-shadow: 0 6px 22px rgba(0,0,0,0.13);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            border-left: 4px solid #1a73e8;
+            padding-left: 10px;
+            color: #222;
         }
 
         label {
             font-weight: 600;
             display: block;
-            margin-top: 10px;
-            margin-bottom: 6px;
+            margin-top: 12px;
         }
 
-        input {
+        input[type="file"] {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #dce3ee;
-            border-radius: 8px;
-            font-size: 15px;
-            margin-bottom: 12px;
+            padding: 14px;
+            border: 2px dashed #bfc9da;
+            background: #f7faff;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 10px;
         }
 
         button {
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             background: #1a73e8;
             color: white;
-            border: none;
-            border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            margin-top: 12px;
             cursor: pointer;
-            margin-top: 10px;
             transition: 0.25s;
         }
 
@@ -78,28 +90,29 @@
 
         .result-box {
             background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
             border-left: 6px solid #1a73e8;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
             margin-top: 15px;
-            white-space: pre-wrap;
             font-size: 15px;
-            line-height: 1.6;
+            line-height: 1.7;
             color: #333;
         }
 
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: #1a1a1a;
-            border-bottom: 2px solid #e8e8e8;
-            padding-bottom: 6px;
+        /* Markdown styling inside result-box */
+        .result-box h1, .result-box h2, .result-box h3 {
+            color: #1a73e8;
+        }
+
+        .result-box ul {
+            margin-left: 20px;
+        }
+
+        .result-box strong {
+            color: #000;
         }
     </style>
-
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -110,19 +123,21 @@
 
 <div class="container">
 
+    <!-- UPLOAD BOX -->
     <div class="card">
-        <div class="section-title">Upload Files</div>
+        <div class="section-title">Upload Resume & Job Description</div>
 
-        <label>Resume (PDF)</label>
+        <label>Resume (PDF):</label>
         <input type="file" id="resume" accept="application/pdf">
 
-        <label>Job Description (PDF)</label>
+        <label>Job Description (PDF):</label>
         <input type="file" id="jd" accept="application/pdf">
 
-        <button onclick="uploadExtract()">Upload and Extract Text</button>
-        <button onclick="runLLM()">Run ATS Evaluation</button>
+        <button onclick="uploadExtract()">Extract Text</button>
+        <button onclick="runLLM()">Run ATS Analysis</button>
     </div>
 
+    <!-- RESULTS BOX -->
     <div class="card">
         <div class="section-title">Results</div>
         <div id="result" class="result-box">No output yet.</div>
@@ -132,12 +147,12 @@
 
 <script>
 
-const BASE_URL = "https://resume-analyser-az0e.onrender.com";   // 🔥 Your deployed backend URL
-
 let globalResume = null;
 let globalJD = null;
 
-// Upload & Extract
+// -----------------------------
+// UPLOAD & EXTRACT
+// -----------------------------
 async function uploadExtract() {
     let resume = document.getElementById("resume").files[0];
     let jd = document.getElementById("jd").files[0];
@@ -154,7 +169,7 @@ async function uploadExtract() {
     fd.append("resume", resume);
     fd.append("jd", jd);
 
-    let res = await fetch(`${BASE_URL}/upload`, {
+    let res = await fetch("/upload", {
         method: "POST",
         body: fd
     });
@@ -164,15 +179,17 @@ async function uploadExtract() {
     document.getElementById("result").innerHTML =
         "<strong>Resume Preview:</strong><br>" +
         data.resume_text +
-        "<br><br>" +
-        "<strong>Job Description Preview:</strong><br>" +
+        "<br><br><strong>Job Description Preview:</strong><br>" +
         data.jd_text;
 }
 
-// Run AI ATS
+
+// -----------------------------
+// RUN THE AI MODEL
+// -----------------------------
 async function runLLM() {
     if (!globalResume || !globalJD) {
-        alert("Please upload the files first.");
+        alert("Upload the files first.");
         return;
     }
 
@@ -180,13 +197,14 @@ async function runLLM() {
     fd.append("resume", globalResume);
     fd.append("jd", globalJD);
 
-    let res = await fetch(`${BASE_URL}/model`, {
+    let res = await fetch("/model", {
         method: "POST",
         body: fd
     });
 
     let data = await res.json();
 
+    // Render AI output as Markdown
     document.getElementById("result").innerHTML = marked.parse(data.response);
 }
 
