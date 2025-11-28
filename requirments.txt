@@ -1,0 +1,5 @@
+groq
+fastapi
+pdfminer.six
+dotenv
+python-multipart
