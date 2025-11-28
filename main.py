@@ -18,7 +18,7 @@ def home():
 
 @app.post("/upload")
 async def upload(resume: UploadFile = File(...), jd: UploadFile = File(...)):
-   
+    -u 
 
    
     resume_text=extract_text(resume.file)
