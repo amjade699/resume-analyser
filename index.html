@@ -4,210 +4,236 @@
     <meta charset="UTF-8">
     <title>ATS Resume Analyzer</title>
 
-    <!-- Markdown Renderer -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
     <style>
         body {
-            margin: 0;
-            padding: 0;
+            font-family: "Inter", Arial, sans-serif;
             background: #eef2f7;
-            font-family: "Segoe UI", sans-serif;
-        }
-
-        .navbar {
-            background: #1a73e8;
-            padding: 18px 0;
-            text-align: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+            margin: 0;
+            padding: 30px;
         }
 
         .container {
-            width: 90%;
             max-width: 900px;
             margin: auto;
-            margin-top: 35px;
-        }
-
-        .card {
+            padding: 30px;
             background: white;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            transition: 0.2s;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.07);
         }
 
-        .card:hover {
-            box-shadow: 0 6px 22px rgba(0,0,0,0.13);
-        }
-
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 14px;
-            border-left: 4px solid #1a73e8;
-            padding-left: 10px;
-            color: #222;
-        }
-
-        label {
-            font-weight: 600;
-            display: block;
-            margin-top: 12px;
+        h2 {
+            margin-bottom: 20px;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #1d2b53;
         }
 
         input[type="file"] {
-            width: 100%;
-            padding: 14px;
-            border: 2px dashed #bfc9da;
-            background: #f7faff;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
         }
 
         button {
-            width: 100%;
-            padding: 15px;
-            background: #1a73e8;
+            padding: 12px 22px;
+            background: #4a6bff;
             color: white;
-            font-size: 16px;
-            font-weight: 600;
             border: none;
-            border-radius: 10px;
-            margin-top: 12px;
+            border-radius: 8px;
+            font-size: 16px;
             cursor: pointer;
-            transition: 0.25s;
+            transition: 0.2s ease;
         }
 
         button:hover {
-            background: #0d53b7;
+            background: #2747ff;
         }
 
-        .result-box {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            border-left: 6px solid #1a73e8;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        #loading {
+            display: none;
             margin-top: 15px;
-            font-size: 15px;
-            line-height: 1.7;
+            font-weight: bold;
+            color: #2747ff;
+        }
+
+        #result-area {
+            margin-top: 30px;
+        }
+
+        /* ---------------- CIRCULAR SCORE ---------------- */
+        .score-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+
+        .circular-score {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: conic-gradient(#4a6bff var(--value), #d9e1ff 0deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: .5s ease;
+        }
+
+        .circular-score::before {
+            content: "";
+            width: 130px;
+            height: 130px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .score-text {
+            position: absolute;
+            font-size: 34px;
+            font-weight: 800;
+            color: #4a6bff;
+        }
+
+        /* ---------------- CATEGORY CARD ---------------- */
+        .category-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 18px;
+            border-left: 6px solid #4a6bff;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.05);
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #233043;
+            margin-bottom: 8px;
+            text-transform: capitalize;
+        }
+
+        .score {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2747ff;
+            margin-bottom: 10px;
+        }
+
+        .summary-text, .improvements {
+            margin-top: 8px;
+            font-size: 14px;
             color: #333;
+            line-height: 1.5;
         }
 
-        /* Markdown styling inside result-box */
-        .result-box h1, .result-box h2, .result-box h3 {
-            color: #1a73e8;
-        }
-
-        .result-box ul {
-            margin-left: 20px;
-        }
-
-        .result-box strong {
-            color: #000;
+        .improvements {
+            color: #4b4b4b;
         }
     </style>
 </head>
 
 <body>
 
-<div class="navbar">
-    ATS Resume Analyzer
-</div>
-
 <div class="container">
+    <h2>ATS Resume Analyzer</h2>
 
-    <!-- UPLOAD BOX -->
-    <div class="card">
-        <div class="section-title">Upload Resume & Job Description</div>
+    <label><b>Upload Resume (PDF):</b></label><br>
+    <input type="file" id="resume" accept="application/pdf"><br>
 
-        <label>Resume (PDF):</label>
-        <input type="file" id="resume" accept="application/pdf">
+    <label><b>Upload Job Description (PDF):</b></label><br>
+    <input type="file" id="jd" accept="application/pdf"><br>
 
-        <label>Job Description (PDF):</label>
-        <input type="file" id="jd" accept="application/pdf">
+    <button onclick="runATS()">Analyze Resume</button>
 
-        <button onclick="uploadExtract()">Extract Text</button>
-        <button onclick="runLLM()">Run ATS Analysis</button>
-    </div>
+    <div id="loading">⏳ Processing... Please wait...</div>
 
-    <!-- RESULTS BOX -->
-    <div class="card">
-        <div class="section-title">Results</div>
-        <div id="result" class="result-box">No output yet.</div>
-    </div>
-
+    <div id="result-area"></div>
 </div>
+
 
 <script>
+async function runATS() {
 
-let globalResume = null;
-let globalJD = null;
+    const resumeFile = document.getElementById("resume").files[0];
+    const jdFile = document.getElementById("jd").files[0];
 
-// -----------------------------
-// UPLOAD & EXTRACT
-// -----------------------------
-async function uploadExtract() {
-    let resume = document.getElementById("resume").files[0];
-    let jd = document.getElementById("jd").files[0];
-
-    if (!resume || !jd) {
-        alert("Please upload both PDF files.");
+    if (!resumeFile || !jdFile) {
+        alert("Please upload both Resume and Job Description.");
         return;
     }
 
-    globalResume = resume;
-    globalJD = jd;
+    let formData = new FormData();
+    formData.append("resume", resumeFile);
+    formData.append("jd", jdFile);
 
-    let fd = new FormData();
-    fd.append("resume", resume);
-    fd.append("jd", jd);
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("result-area").innerHTML = "";
 
-    let res = await fetch("/upload", {
-        method: "POST",
-        body: fd
-    });
+    try {
+        const response = await fetch("/model", {
+            method: "POST",
+            body: formData
+        });
 
-    let data = await res.json();
+        const jsonData = await response.json();
 
-    document.getElementById("result").innerHTML =
-        "<strong>Resume Preview:</strong><br>" +
-        data.resume_text +
-        "<br><br><strong>Job Description Preview:</strong><br>" +
-        data.jd_text;
-}
+        if (jsonData.error) {
+            document.getElementById("result-area").innerHTML =
+                "<div style='color:red;'>Backend Error: " + jsonData.error + "</div>";
+            return;
+        }
 
+        renderATS(jsonData);
 
-// -----------------------------
-// RUN THE AI MODEL
-// -----------------------------
-async function runLLM() {
-    if (!globalResume || !globalJD) {
-        alert("Upload the files first.");
-        return;
+    } catch (err) {
+        document.getElementById("result-area").innerHTML =
+            "<div style='color:red;'>Error: " + err + "</div>";
     }
 
-    let fd = new FormData();
-    fd.append("resume", globalResume);
-    fd.append("jd", globalJD);
-
-    let res = await fetch("/model", {
-        method: "POST",
-        body: fd
-    });
-
-    let data = await res.json();
-
-    // Render AI output as Markdown
-    document.getElementById("result").innerHTML = marked.parse(data.response);
+    document.getElementById("loading").style.display = "none";
 }
 
+function renderATS(data) {
+
+    let output = "";
+
+    /* ===== Overall Score Circular Bar ===== */
+    const angle = (data.overall_score / 100) * 360;
+
+    output += `
+        <div class="score-wrapper">
+            <div class="circular-score" style="--value: ${angle}deg;">
+                <div class="score-text">${data.overall_score}%</div>
+            </div>
+        </div>
+    `;
+
+    /* ===== Category Cards ===== */
+    for (const [category, details] of Object.entries(data.categories)) {
+
+        output += `
+            <div class="category-card">
+                <div class="category-title">${category.replaceAll("_", " ")}</div>
+
+                <div class="score">
+                    Score: ${details.score}% — ${details.status}
+                </div>
+
+                <div class="summary-text">
+                    <b>Summary:</b><br> ${details.summary}
+                </div>
+
+                <div class="improvements">
+                    <b>Improvements:</b><br>
+                    ${details.improvements}
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById("result-area").innerHTML = output;
+}
 </script>
 
 </body>
