@@ -14,7 +14,7 @@ def home():
     return FileResponse("index.html", media_type="text/html")
 
 
-# CLEANING HELPERS
+
 def clean(t: str):
     return re.sub(r"\s+", " ", t.lower()).strip()
 
@@ -146,9 +146,7 @@ Return output ONLY in this exact JSON:
 }}
 """
 
-    # -----------------------------------------------------------
-    # CALL LLM
-    # -----------------------------------------------------------
+   
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
